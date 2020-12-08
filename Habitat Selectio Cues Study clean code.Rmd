@@ -1,0 +1,264 @@
+---
+title: "Habitat Selection Cue Paper - Clean Plots"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## filter 0 values
+## ARD_3
+```{r}
+
+ARD_post_out_plant_new <- read_csv("Artificial coral experiment/data/Art Recruit data/final clean data frames/ARD_post_out_plant_new.csv")
+ARD <- ARD_post_out_plant_new
+
+#1) one df with all fish 3cm and under that have presence = 1
+ARD_3_only <- ARD %>%
+  filter(TL <= 3) %>%
+  mutate(presence = 1)
+
+#2) one df with the plot_grid_visits for all fish 3cm and under (to find out which plot_grid_visits are missing)
+ARD_3_only_plot_grid_visit <- ARD %>% 
+  filter(TL <= 3) %>% 
+  distinct(plot_grid_visit)
+
+write.csv(ARD_3_only_plot_grid_visit, "ARD_3_only_plot_grid_visit.csv")
+#exported just the distinct plot_grid_survey. copied the plot_gri_survey from ARD_post_out_plant in first col (delete duplicates)
+#compared cols to remove duplicates using this formula:=IF(ISERROR(MATCH(A2,$B$1:$B$10000,0)),"Unique","Duplicate") in c2
+# used filter to just get the unique values.copy and past unique plot_grid_survey values from 1st col to new csv file
+# this should serve as look-up table to get plot_grid_visit values of fish not 3cm and smaller (that have presence of 0)
+# save as ARD_3_0_lookup import
+
+ARD_3_0_lookup <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/test ARD_3/ARD_3_0_lookup.csv")
+#3) join ARD_3_0_lookup with ARD_3_none but only for the plot_grid_visit values in the lookup table
+
+#df with all other fish that are 4cm and bigger,and a col that has fish.presence = 0
+ARD_3_none <- ARD %>% 
+  mutate(presence = 0)
+
+#only keeps records that have matching plot_grid_survey in both lookup and ARD_3_none
+ARD_just_0 <- inner_join(ARD_3_none, ARD_3_0_lookup) %>% 
+distinct(plot_grid_visit, .keep_all = TRUE)
+
+#need a line of code that makes all the species info for 0 values as NA: do manually
+write.csv(ARD_just_0, "ARD_just_0.csv")
+#made all values under SpeciesCode all the way to transit NA
+
+ARD_just_0n2 <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/test ARD_3/ARD_just_0.csv")
+
+#can now join ARD_3_only and ARD_just_0 and calculate new density value...based on plot_grid_visit
+ARD_3_with_0n2 <- bind_rows(ARD_3_only, ARD_just_0n2) %>% 
+  group_by(plot_grid_visit) %>%
+  mutate(density = sum(presence)/0.79)
+#use this data frame for proportion col plot or when comparing spp over time to each treatment
+
+write.csv(ARD_3_with_0n2,"ARD_3_with_0.csv")
+
+a3 <- ARD_3_with_0 %>% 
+  
+  
+
+```
+
+## ARD_4to6
+
+```{r}
+
+ARD_post_out_plant_new <- read_csv("Artificial coral experiment/data/Art Recruit data/final clean data frames/ARD_post_out_plant_new.csv")
+ARD <- ARD_post_out_plant_new
+
+#1) one df with all fish 4-6cm that have presence = 1
+ARD_4to6_only <- ARD %>%
+  filter(TL %in% (4:6)) %>%
+  mutate(presence = 1)
+
+#2) one df with the plot_grid_visits for all fish4-6cm (to find out which plot_grid_visits are missing)
+ARD_4to6_only_plot_grid_visit <- ARD %>% 
+  filter(TL %in% (4:6)) %>%
+  distinct(plot_grid_visit)
+
+write.csv(ARD_4to6_only_plot_grid_visit, "ARD_4to6_only_plot_grid_visit.csv")
+#exported just the distinct plot_grid_survey. copied the plot_gri_survey from ARD_post_out_plant in first col (delete duplicates)
+#compared cols to remove duplicates using this formula:=IF(ISERROR(MATCH(A2,$B$1:$B$10000,0)),"Unique","Duplicate") in c2
+# used filter to just get the unique values.copy and past unique plot_grid_survey values from 1st col to new csv file
+# this should serve as look-up table to get plot_grid_visit values of fish not 4-6cm (that have presence of 0)
+# save as ARD_4to6_0_lookup import
+
+ARD_4to6_0_lookup <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/ARD_4to6/check calculations/ARD_4to6_0_lookup.csv")
+#3) join ARD4to6_0_lookup with ARD_4to6_none but only for the plot_grid_visit values in the lookup table
+
+#df with all other fish that are 4cm and bigger,and a col that has fish.presence = 0
+ARD_4to6_none <- ARD %>% 
+  mutate(presence = 0)
+
+#only keeps records that have matching plot_grid_survey in both lookup and ARD_4to6_none
+ARD_4to6_just_0 <- inner_join(ARD_4to6_none, ARD_4to6_0_lookup) %>% 
+distinct(plot_grid_visit, .keep_all = TRUE)
+
+#m all the species info for 0 values as NA: do manually
+write.csv(ARD_4to6_just_0, "ARD_4to6_just_0.csv")
+#made all values under SpeciesCode all the way to transit NA
+
+ARD_4to6_just_0na <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/ARD_4to6/check calculations/ARD_4to6_just_0na.csv")
+
+#can now join ARD_4to6_only and ARD_4to6_just_0 and calculate new density value...based on plot_grid_visit
+ARD_4to6_with_0n2 <- bind_rows(ARD_4to6_only, ARD_4to6_just_0na) %>% 
+  group_by(plot_grid_visit) %>%
+  mutate(density = sum(presence)/0.79) %>% 
+  distinct(plot_grid_visit, .keep_all = TRUE)
+#use this data frame for proportion col plot or when comparing spp over time to each treatment
+
+write.csv(ARD_4to6_with_0n2,"ARD_4to6_with_0n2.csv")
+
+```
+
+## add days_since_outplanting
+
+## ARD_4to6
+```{r}
+ARD_4to6_with_0n2 <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/ARD_4to6/check calculations/ARD_4to6_with_0n2.csv")
+ArtR_days_since_lookup_new <- read_csv("Artificial coral experiment/data/Art Recruit data/data frames to join/ArtR_days_since_lookup_new.csv")
+
+#1) make a col in each df that is common (date-plot)
+
+ARD_4to6_with_0n2$plot_date <- paste(ARD_4to6_with_0n2$plot, "-", ARD_4to6_with_0n2$date)
+ArtR_days_since_lookup_new$plot_date <- paste(ArtR_days_since_lookup_new$plot, "-", ArtR_days_since_lookup_new$date)
+
+#2) delete date and plot cols from the lookup table
+
+select(ArtR_days_since_lookup_new, -date)
+select(ArtR_days_since_lookup_new, -plot)
+
+#3) join them by plot-date
+
+ARD_4to6_with_0_new_2 <- inner_join(ARD_4to6_with_0n2, ArtR_days_since_lookup_new)
+
+write.csv(ARD_4to6_with_0_new_2, "ARD_4to6_with_0_new_2.csv")
+```
+
+You can also embed plots, for example:
+
+## plot density over time
+## ARD_3
+```{r}
+
+
+```
+
+## ARD_4to6
+```{r, echo=FALSE}
+ARD_4to6_with_0_new_2 <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/ARD_4to6/check calculations/ARD_4to6_with_0_new_2.csv") %>% 
+  mutate(treatment = factor(treatment, levels = c("control", "100A", "30L70A", "50L50A", "70L30A", "100L"),
+                            labels = c("control", "0%", "30%", "50%", "70%", "100%"))) %>% 
+  distinct(plot_grid_visit, .keep_all = TRUE)
+
+
+#density over time
+ARD_dens_sum_4to6 <- ARD_4to6_with_0_new_2 %>% 
+  # mutate(treatment = factor(treatment, levels = c("control","0%", "30%", "50%", "70%", "100%"))) %>% 
+  filter(date != "09-Jun-19") %>% # aborted survey cos dangerous boater (4 days since outplanting)
+  mutate(complexity = factor(complexity, levels = c ("Low", "High"))) %>% 
+  group_by(complexity, treatment, days_since_outplanting) %>% 
+  summarize(density.mean = mean(density), density.sd = sd(density)) %>% 
+  mutate(density.se = density.sd/sqrt(1474))
+
+#density over time
+ggplot(data = ARD_dens_sum_4to6) +
+  facet_grid(~complexity) +
+  geom_point(aes(x = days_since_outplanting,
+                 y = density.mean,
+                 colour = treatment),
+             size = 2) +
+  stat_smooth(aes(x = days_since_outplanting,
+                  y = density.mean,
+                  colour = treatment),
+              method = "lm",
+              se = FALSE,
+              formula = y ~ poly(x,2,raw = TRUE),
+              size = 2) +
+  scale_colour_manual(values = c("gray44", "firebrick", "darkorange1", "goldenrod1", "mediumseagreen", "royalblue"))+
+  labs(x = expression(Days~Since~Outplanting),
+       y = expression(Density~(fish~m^{2})),
+       colour = "Treatment") +
+  # ylim(0, 7) +
+  # xlim(0,50) +
+  ggtitle("Density over time 4-6 (3nd order poly)") +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    strip.text = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14)
+  )
+
+ggsave(filename = "ARD 4to6 density over time 2nd poly",
+       plot = last_plot,
+       device = "png",
+       width = 10,
+       heigh = 6)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Daily Reruitment Rate
+## ARD_4to6
+```{r}
+
+#1 ) import ARD_3_with_0_new_2 (has days since outplanting as a col) for mean density values
+ARD_4to6_with_0_new_2 <- read_csv("Artificial coral experiment/data/Art Recruit data/filter 0 values/ARD_4to6/check calculations/ARD_4to6_with_0_new_2.csv")
+ARD_dr_4to6 <- ARD_4to6_with_0_new_2 %>% 
+  mutate(treatment = factor(treatment, levels = c("control", "100A", "30L70A", "50L50A", "70L30A", "100L"),
+                            labels = c("control", "0%", "30%", "50%", "70%", "100%")))
+unique(ARD_dr_4to6$days_since_outplanting)
+
+ARD_dr_4to6 <-  ARD_dr_4to6 %>% 
+  select(days_since_outplanting, plot_grid,  density) %>% 
+  distinct(days_since_outplanting, plot_grid, density) 
+
+#2) export to use pivot table to get 0 values
+write.xlsx(ARD_dr_4to6,"ARD_dr_4to6.xlsx")
+#export to make a pivot table --> make sure all blanks are 0
+
+#3 ) import and convert to long format
+ARD_dr_wide_4to6 <- read_csv("Artificial coral experiment/data/Art Recruit data/density rate calculations/with 0 values/ARD_4to6/daily rate/all fish/ARD_dr_wide_4to6.csv")
+View(ARD_dr_wide_4to6)
+
+names(ARD_dr_wide) #to get each date
+
+ARD_dr_long_4to6 <- ARD_dr_wide_4to6 %>% 
+  gather(c("1","2","3","4","5","7","9","11","13","18","23","26","30","33","37","43","48"),
+         key = days_since_outplanting,
+         value = density)
+
+#4) Export long format to make column called delta dentisy 
+# = density at time x - density at time x-days since last visit
+
+write.xlsx(ARD_dr_long_4to6, "ARD_dr_long_4to6.xlsx")
+#change Row Labels to plot_grid
+# sort by plot_grid, then days_since_out_planting
+# formula: =(C3-C2)/(B3-B2)
+# make sure the first of every plot_grid is 0, used formula =ABS(0)
+
+#5) Import the new sheet with daily rate of recruitment data (dr_density)
+ARD_dr_long_rate_4to6 <- read_csv("Artificial coral experiment/data/Art Recruit data/density rate calculations/with 0 values/ARD_4to6/daily rate/all fish/ARD_dr_long_rate_4to6.csv")
+
+
+#join ARD_d_convert to ARD_lookup to get treatment and complexity information
+ARD_lookup <- read_csv("Artificial coral experiment/data/Art Recruit data/ARD_lookup.csv")
+
+ARD_dr_rate_4to6 <- full_join(ARD_dr_long_rate_4to6, ARD_lookup) %>% 
+  mutate(days_since_outplanting = as.numeric(days_since_outplanting))
+
+#make treatment levels in order from control to 100% and order of dates chronological
+ARD_dr_rate_4to6 <- ARD_dr_rate_4to6 %>% 
+  mutate(treatment = factor(treatment, levels = c("control","0%", "30%", "50%", "70%", "100%")))
+# mutate(date = factor(days_since_outplanting, levels = c("1","2","3","4","5","7","9","11","13","18","23","26","30","33","37","43","48")))
+
+
+write.csv(ARD_dr_rate_4to6,"ARD_dr_rate_4to6.csv")
+
+```
+
